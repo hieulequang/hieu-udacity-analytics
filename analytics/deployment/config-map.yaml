@@ -8,17 +8,7 @@ data:
   DB_NAME: postgres
 mapRoles: |
 
-    - rolearn:  arn:aws:iam::AccountId:role/devel-worker-nodes-NodeInstanceRole-14W1I3VCZQHU7
-
-      username: system:node:{{EC2PrivateDNSName}}
-
-      groups:
-
-        - system:bootstrappers
-
-        - system:nodes
-
-    - rolearn: arn:aws:iam::AccountId:role/codebuild-udacity-analytics-build-service-role-2
+    - rolearn: arn:aws:iam::973688821910:role/codebuild-udacity-analytics-build-service-role-2
 
       username: build
 
