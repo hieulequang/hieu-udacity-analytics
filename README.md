@@ -25,46 +25,43 @@ Set up a Postgres database using a Helm Chart.
 
 1. Set up Bitnami Repo
 ```bash
-helm repo add <REPO_NAME> https://charts.bitnami.com/bitnami
+helm repo add hieu-repo https://charts.bitnami.com/bitnami
 ```
 
 2. Install PostgreSQL Helm Chart
-```
-helm install <SERVICE_NAME> <REPO_NAME>/postgresql
-```
+```bash
+### **Deploy postgresql through helm**
+helm install hieu-service hieu-repo/postgresql --set primary.persistence.enabled=false --set postgresqlPassword=postgres
 
-This should set up a Postgre deployment at `<SERVICE_NAME>-postgresql.default.svc.cluster.local` in your Kubernetes cluster. You can verify it by running `kubectl svc`
-
+```
 By default, it will create a username `postgres`. The password can be retrieved with the following command:
 ```bash
-export POSTGRES_PASSWORD=$(kubectl get secret --namespace default <SERVICE_NAME>-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace default hieu-service-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
 
 echo $POSTGRES_PASSWORD
 ```
 
-<sup><sub>* The instructions are adapted from [Bitnami's PostgreSQL Helm Chart](https://artifacthub.io/packages/helm/bitnami/postgresql).</sub></sup>
-
 3. Test Database Connection
-The database is accessible within the cluster. This means that when you will have some issues connecting to it via your local environment. You can either connect to a pod that has access to the cluster _or_ connect remotely via [`Port Forwarding`](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/)
 
 * Connecting Via Port Forwarding
 ```bash
-kubectl port-forward --namespace default svc/<SERVICE_NAME>-postgresql 5432:5432 &
+kubectl port-forward --namespace default svc/hieu-service-postgresql 5432:5432 &
     PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432
-```
 
-* Connecting Via a Pod
-```bash
-kubectl exec -it <POD_NAME> bash
-PGPASSWORD="<PASSWORD HERE>" psql postgres://postgres@<SERVICE_NAME>:5432/postgres -c <COMMAND_HERE>
+
+
 ```
 
 4. Run Seed Files
 We will need to run the seed files in `db/` in order to create the tables and populate them with data.
 
 ```bash
-kubectl port-forward --namespace default svc/<SERVICE_NAME>-postgresql 5432:5432 &
-    PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < <FILE_NAME.sql>
+cd ../db
+
+kubectl port-forward --namespace default svc/hieu-service-postgresql 5432:5432
+PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < 1_create_tables.sql
+PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < 2_seed_users.sql
+PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < 3_seed_tokens.sql
 ```
 
 ### 2. Running the Analytics Application Locally
@@ -89,9 +86,8 @@ There are multiple ways to set environment variables in a command. They can be s
 
 If we set the environment variables by prepending them, it would look like the following:
 ```bash
-DB_USERNAME=username_here DB_PASSWORD=password_here python app.py
+DB_USERNAME=postgres DB_PASSWORD=Zi9ETkAJuD python app.py
 ```
-The benefit here is that it's explicitly set. However, note that the `DB_PASSWORD` value is now recorded in the session's history in plaintext. There are several ways to work around this including setting environment variables in a file and sourcing them in a terminal session.
 
 3. Verifying The Application
 * Generate report for check-ins grouped by dates
@@ -114,7 +110,7 @@ The benefit here is that it's explicitly set. However, note that the `DB_PASSWOR
 4. Screenshot of `kubectl get svc`
 5. Screenshot of `kubectl get pods`
 6. Screenshot of `kubectl describe svc <DATABASE_SERVICE_NAME>`
-7. Screenshot of `kubectl describe deployment <SERVICE_NAME>`
+7. Screenshot of `kubectl describe deployment hieu-service`
 8. All Kubernetes config files used for deployment (ie YAML files)
 9. Screenshot of AWS CloudWatch logs for the application
 10. `README.md` file in your solution that serves as documentation for your user to detail how your deployment process works and how the user can deploy changes. The details should not simply rehash what you have done on a step by step basis. Instead, it should help an experienced software developer understand the technologies and tools in the build and deploy process as well as provide them insight into how they would release new builds.
