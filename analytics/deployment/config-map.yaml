@@ -6,12 +6,3 @@ data:
   DB_HOST: postgresql.default.svc.cluster.local
   DB_PORT: "5432"
   DB_NAME: postgres
-mapRoles: |
-
-    - rolearn: arn:aws:iam::973688821910:role/codebuild-udacity-analytics-build-service-role-2
-
-      username: build
-
-      groups:
-
-        - system:masters
