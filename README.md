@@ -63,6 +63,37 @@ PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p
 PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < 2_seed_users.sql
 PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < 3_seed_tokens.sql
 ```
+``` Change the role for the CodeBuild
+
+kubectl edit -n kube-system configmap/aws-auth
+
+  1 # Please edit the object below. Lines beginning with a '#' will be ignored,
+  1 # Please edit the object below. Lines beginning with a '#' will be ignored,
+  2 # and an empty file will abort the edit. If an error occurs while saving this file will be
+  1 # Please edit the object below. Lines beginning with a '#' will be ignored,
+  3 # reopened with the relevant failures.
+  4 #
+  5 apiVersion: v1
+  6 data:
+  7   mapRoles: |
+  8     - groups:
+  9       - system:bootstrappers
+ 10       - system:nodes
+ 11       rolearn: arn:aws:iam::973688821910:role/EMR_EC2_DefaultRole
+ 12       username: system:node:{{EC2PrivateDNSName}}
+ 13     - rolearn: arn:aws:iam::973688821910:role/codebuild-udacity-analytics-build-service-role-2
+ 14       username: build
+ 15       groups:
+ 16         - system:masters
+ 17 kind: ConfigMap
+ 18 metadata:
+ 19   creationTimestamp: "2023-11-28T13:57:33Z"
+ 20   name: aws-auth
+ 21   namespace: kube-system
+ 22   resourceVersion: "336857"
+ 23   uid: 3e0651eb-21a2-4808-ac8b-2456b190e1c3
+
+```
 
 ### 2. Running the Analytics Application Locally
 In the `analytics/` directory:
